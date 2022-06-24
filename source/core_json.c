@@ -70,12 +70,17 @@ typedef union
 static void skipSpace( const char * buf,
                        size_t * start,
                        size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     size_t i;
 
     assert( ( buf != NULL ) && ( start != NULL ) && ( max > 0U ) );
 
     for( i = *start; i < max; i++ )
+        __CPROVER_loop_invariant(__CPROVER_rw_ok(start))
+        __CPROVER_loop_invariant(__CPROVER_r_ok(buf, max))
     {
         if( !isspace_( buf[ i ] ) )
         {
@@ -95,6 +100,7 @@ static void skipSpace( const char * buf,
  * @return the count
  */
 static size_t countHighBits( uint8_t c )
+  __CPROVER_requires(1)
 {
     uint8_t n = c;
     size_t i = 0;
@@ -127,6 +133,7 @@ static size_t countHighBits( uint8_t c )
  */
 static bool shortestUTF8( size_t length,
                           uint32_t value )
+  __CPROVER_requires(length >= 2U && length <= 4U)
 {
     bool ret = false;
     uint32_t min, max;
@@ -186,6 +193,11 @@ static bool shortestUTF8( size_t length,
 static bool skipUTF8MultiByte( const char * buf,
                                size_t * start,
                                size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(*start < max)
+  __CPROVER_requires(!isascii_(buf[*start]))
 {
     bool ret = false;
     size_t i, bitCount, j;
@@ -203,11 +215,15 @@ static bool skipUTF8MultiByte( const char * buf,
     if( ( c.u > 0xC1U ) && ( c.u < 0xF5U ) )
     {
         bitCount = countHighBits( c.u );
+        __CPROVER_assume(bitCount >= 2 && bitCount <= 4);
         value = ( ( uint32_t ) c.u ) & ( ( ( uint32_t ) 1 << ( 7U - bitCount ) ) - 1U );
 
         /* The bit count is 1 greater than the number of bytes,
          * e.g., when j is 2, we skip one more byte. */
         for( j = bitCount - 1U; j > 0U; j-- )
+            __CPROVER_loop_invariant(__CPROVER_r_ok(buf, max))
+            __CPROVER_loop_invariant(__CPROVER_rw_ok(start))
+            __CPROVER_loop_invariant(bitCount >= 2 && bitCount <= 4)
         {
             i++;
 
@@ -250,6 +266,9 @@ static bool skipUTF8MultiByte( const char * buf,
 static bool skipUTF8( const char * buf,
                       size_t * start,
                       size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     bool ret = false;
 
@@ -325,6 +344,10 @@ static bool skipOneHexEscape( const char * buf,
                               size_t * start,
                               size_t max,
                               uint16_t * outValue )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(__CPROVER_w_ok(outValue))
 {
     bool ret = false;
     size_t i, end;
@@ -340,6 +363,10 @@ static bool skipOneHexEscape( const char * buf,
     if( ( end < max ) && ( buf[ i ] == '\\' ) && ( buf[ i + 1U ] == 'u' ) )
     {
         for( i += 2U; i < end; i++ )
+            __CPROVER_loop_invariant(end < max)
+            __CPROVER_loop_invariant(__CPROVER_r_ok(buf, max))
+            __CPROVER_loop_invariant(__CPROVER_rw_ok(start))
+            __CPROVER_loop_invariant(__CPROVER_w_ok(outValue))
         {
             uint8_t n = hexToInt( buf[ i ] );
 
@@ -385,6 +412,9 @@ static bool skipOneHexEscape( const char * buf,
 static bool skipHexEscape( const char * buf,
                            size_t * start,
                            size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     bool ret = false;
     size_t i;
@@ -437,6 +467,9 @@ static bool skipHexEscape( const char * buf,
 static bool skipEscape( const char * buf,
                         size_t * start,
                         size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     bool ret = false;
     size_t i;
@@ -504,6 +537,9 @@ static bool skipEscape( const char * buf,
 static bool skipString( const char * buf,
                         size_t * start,
                         size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     bool ret = false;
     size_t i;
@@ -517,6 +553,8 @@ static bool skipString( const char * buf,
         i++;
 
         while( i < max )
+            __CPROVER_loop_invariant(__CPROVER_r_ok(buf, max))
+            __CPROVER_loop_invariant(__CPROVER_rw_ok(start))
         {
             if( buf[ i ] == '"' )
             {
@@ -569,12 +607,16 @@ static bool skipString( const char * buf,
 static bool strnEq( const char * a,
                     const char * b,
                     size_t n )
+  __CPROVER_requires(__CPROVER_r_ok(a, n))
+  __CPROVER_requires(__CPROVER_r_ok(b, n))
 {
     size_t i;
 
     assert( ( a != NULL ) && ( b != NULL ) );
 
     for( i = 0; i < n; i++ )
+        __CPROVER_loop_invariant(__CPROVER_r_ok(a, n))
+        __CPROVER_loop_invariant(__CPROVER_r_ok(b, n))
     {
         if( a[ i ] != b[ i ] )
         {
@@ -602,6 +644,9 @@ static bool skipLiteral( const char * buf,
                          size_t max,
                          const char * literal,
                          size_t length )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     bool ret = false;
 
@@ -634,6 +679,9 @@ static bool skipLiteral( const char * buf,
 static bool skipAnyLiteral( const char * buf,
                             size_t * start,
                             size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     bool ret = false;
 
@@ -668,6 +716,10 @@ static bool skipDigits( const char * buf,
                         size_t * start,
                         size_t max,
                         int32_t * outValue )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(outValue == NULL || __CPROVER_w_ok(outValue))
 {
     bool ret = false;
     size_t i, saveStart;
@@ -678,6 +730,9 @@ static bool skipDigits( const char * buf,
     saveStart = *start;
 
     for( i = *start; i < max; i++ )
+        __CPROVER_loop_invariant(__CPROVER_r_ok(buf, max))
+        __CPROVER_loop_invariant(__CPROVER_rw_ok(start))
+        __CPROVER_loop_invariant(outValue == NULL || __CPROVER_rw_ok(outValue))
     {
         if( !isdigit_( buf[ i ] ) )
         {
@@ -723,6 +778,9 @@ static bool skipDigits( const char * buf,
 static void skipDecimals( const char * buf,
                           size_t * start,
                           size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     size_t i;
 
@@ -751,6 +809,9 @@ static void skipDecimals( const char * buf,
 static void skipExponent( const char * buf,
                           size_t * start,
                           size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     size_t i;
 
@@ -787,6 +848,9 @@ static void skipExponent( const char * buf,
 static bool skipNumber( const char * buf,
                         size_t * start,
                         size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     bool ret = false;
     size_t i;
@@ -843,6 +907,9 @@ static bool skipNumber( const char * buf,
 static bool skipAnyScalar( const char * buf,
                            size_t * start,
                            size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     bool ret = false;
 
@@ -873,6 +940,9 @@ static bool skipAnyScalar( const char * buf,
 static bool skipSpaceAndComma( const char * buf,
                                size_t * start,
                                size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     bool ret = false;
     size_t i;
@@ -909,6 +979,9 @@ static bool skipSpaceAndComma( const char * buf,
 static void skipArrayScalars( const char * buf,
                               size_t * start,
                               size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     size_t i;
 
@@ -950,6 +1023,9 @@ static void skipArrayScalars( const char * buf,
 static void skipObjectScalars( const char * buf,
                                size_t * start,
                                size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     size_t i;
     bool comma;
@@ -1008,6 +1084,10 @@ static void skipScalars( const char * buf,
                          size_t * start,
                          size_t max,
                          char mode )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(isOpenBracket_( mode ))
 {
     assert( isOpenBracket_( mode ) );
 
@@ -1044,6 +1124,9 @@ static void skipScalars( const char * buf,
 static JSONStatus_t skipCollection( const char * buf,
                                     size_t * start,
                                     size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
 {
     JSONStatus_t ret = JSONPartial;
     char c, stack[ JSON_MAX_DEPTH ];
@@ -1055,6 +1138,12 @@ static JSONStatus_t skipCollection( const char * buf,
     i = *start;
 
     while( i < max )
+      __CPROVER_loop_invariant(__CPROVER_r_ok(buf, max))
+      __CPROVER_loop_invariant(__CPROVER_rw_ok(start))
+      __CPROVER_loop_invariant(max > 0)
+      __CPROVER_loop_invariant(depth >= -1 && depth <= JSON_MAX_DEPTH)
+      __CPROVER_loop_invariant(__CPROVER_rw_ok(&i))
+      // forall e in stack[0..depth]. isOpenBracket_(e)
     {
         c = buf[ i ];
         i++;
@@ -1084,6 +1173,7 @@ static JSONStatus_t skipCollection( const char * buf,
 
                     if( skipSpaceAndComma( buf, &i, max ) == true )
                     {
+                        __CPROVER_assume(isOpenBracket_(stack[depth]));
                         skipScalars( buf, &i, max, stack[ depth ] );
                     }
 
@@ -1123,6 +1213,7 @@ static JSONStatus_t skipCollection( const char * buf,
  */
 JSONStatus_t JSON_Validate( const char * buf,
                             size_t max )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
 {
     JSONStatus_t ret;
     size_t i = 0;
@@ -1189,6 +1280,11 @@ static bool nextValue( const char * buf,
                        size_t max,
                        size_t * value,
                        size_t * valueLength )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(__CPROVER_w_ok(value))
+  __CPROVER_requires(__CPROVER_w_ok(valueLength))
 {
     bool ret = true;
     size_t i, valueStart;
@@ -1242,6 +1338,13 @@ static bool nextKeyValuePair( const char * buf,
                               size_t * keyLength,
                               size_t * value,
                               size_t * valueLength )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(__CPROVER_w_ok(key))
+  __CPROVER_requires(__CPROVER_w_ok(keyLength))
+  __CPROVER_requires(__CPROVER_w_ok(value))
+  __CPROVER_requires(__CPROVER_w_ok(valueLength))
 {
     bool ret = true;
     size_t i, keyStart;
@@ -1314,6 +1417,11 @@ static bool objectSearch( const char * buf,
                           size_t queryLength,
                           size_t * outValue,
                           size_t * outValueLength )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(__CPROVER_r_ok(query, queryLength))
+  __CPROVER_requires(__CPROVER_w_ok(outValue))
+  __CPROVER_requires(__CPROVER_w_ok(outValueLength))
 {
     bool ret = false;
 
@@ -1330,6 +1438,8 @@ static bool objectSearch( const char * buf,
         skipSpace( buf, &i, max );
 
         while( i < max )
+          __CPROVER_loop_invariant(__CPROVER_r_ok(buf, max))
+          __CPROVER_loop_invariant(__CPROVER_r_ok(query, queryLength))
         {
             if( nextKeyValuePair( buf, &i, max, &key, &keyLength,
                                   &value, &valueLength ) != true )
@@ -1381,6 +1491,10 @@ static bool arraySearch( const char * buf,
                          uint32_t queryIndex,
                          size_t * outValue,
                          size_t * outValueLength )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(__CPROVER_w_ok(outValue))
+  __CPROVER_requires(__CPROVER_w_ok(outValueLength))
 {
     bool ret = false;
     size_t i = 0, value = 0, valueLength = 0;
@@ -1397,6 +1511,10 @@ static bool arraySearch( const char * buf,
         skipSpace( buf, &i, max );
 
         while( i < max )
+          __CPROVER_loop_invariant(__CPROVER_r_ok(buf, max))
+          __CPROVER_loop_invariant(max > 0)
+          __CPROVER_loop_invariant(__CPROVER_w_ok(outValue))
+          __CPROVER_loop_invariant(__CPROVER_w_ok(outValueLength))
         {
             if( nextValue( buf, &i, max, &value, &valueLength ) != true )
             {
@@ -1449,6 +1567,9 @@ static bool skipQueryPart( const char * buf,
                            size_t * start,
                            size_t max,
                            size_t * outLength )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(__CPROVER_w_ok(outLength))
 {
     bool ret = false;
     size_t i;
@@ -1498,6 +1619,12 @@ static JSONStatus_t multiSearch( const char * buf,
                                  size_t queryLength,
                                  size_t * outValue,
                                  size_t * outValueLength )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(__CPROVER_r_ok(query, queryLength))
+  __CPROVER_requires(queryLength > 0)
+  __CPROVER_requires(__CPROVER_w_ok(outValue))
+  __CPROVER_requires(__CPROVER_w_ok(outValueLength))
 {
     JSONStatus_t ret = JSONSuccess;
     size_t i = 0, start = 0, queryStart = 0, value = 0, length = max;
@@ -1507,6 +1634,7 @@ static JSONStatus_t multiSearch( const char * buf,
     assert( ( max > 0U ) && ( queryLength > 0U ) );
 
     while( i < queryLength )
+      __CPROVER_loop_invariant(__CPROVER_r_ok(query, queryLength))
     {
         bool found = false;
 
@@ -1577,6 +1705,7 @@ static JSONStatus_t multiSearch( const char * buf,
  * @return an enum of JSONTypes_t
  */
 static JSONTypes_t getType( char c )
+  __CPROVER_requires(1)
 {
     JSONTypes_t t;
 
@@ -1626,6 +1755,11 @@ JSONStatus_t JSON_SearchConst( const char * buf,
                                const char ** outValue,
                                size_t * outValueLength,
                                JSONTypes_t * outType )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_r_ok(query, queryLength))
+  __CPROVER_requires(__CPROVER_w_ok(outValue))
+  __CPROVER_requires(__CPROVER_w_ok(outValueLength))
+  __CPROVER_requires(__CPROVER_w_ok(outType))
 {
     JSONStatus_t ret;
     size_t value = 0U;
@@ -1676,6 +1810,11 @@ JSONStatus_t JSON_SearchT( char * buf,
                            char ** outValue,
                            size_t * outValueLength,
                            JSONTypes_t * outType )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(__CPROVER_r_ok(query, queryLength))
+  __CPROVER_requires(__CPROVER_w_ok(outValue))
+  __CPROVER_requires(__CPROVER_w_ok(outValueLength))
+  __CPROVER_requires(__CPROVER_w_ok(outType))
 {
     /* MISRA Rule 11.3 prohibits casting a pointer to a different type.
      * This instance is a false positive, as the rule permits the
@@ -1711,6 +1850,14 @@ static JSONStatus_t iterate( const char * buf,
                              size_t * outKeyLength,
                              size_t * outValue,
                              size_t * outValueLength )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(__CPROVER_rw_ok(next))
+  __CPROVER_requires(__CPROVER_w_ok(outKey))
+  __CPROVER_requires(__CPROVER_w_ok(outKeyLength))
+  __CPROVER_requires(__CPROVER_w_ok(outValue))
+  __CPROVER_requires(__CPROVER_w_ok(outValueLength))
 {
     JSONStatus_t ret = JSONNotFound;
     bool found = false;
@@ -1765,6 +1912,11 @@ JSONStatus_t JSON_Iterate( const char * buf,
                            size_t * start,
                            size_t * next,
                            JSONPair_t * outPair )
+  __CPROVER_requires(__CPROVER_r_ok(buf, max))
+  __CPROVER_requires(max > 0)
+  __CPROVER_requires(__CPROVER_rw_ok(start))
+  __CPROVER_requires(__CPROVER_rw_ok(next))
+  __CPROVER_requires(__CPROVER_rw_ok(outPair))
 {
     JSONStatus_t ret;
     size_t key, keyLength, value, valueLength;

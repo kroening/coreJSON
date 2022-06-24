@@ -1,0 +1,13 @@
+#!/bin/bash
+
+FILES=""
+ARGS=""
+for arg in "$@" ; do
+  case "$arg" in
+    -*)       ARGS+=" ${arg}";;
+    source/*) FILES+=" ../../${arg}";;
+    *)        ARGS+=" ${arg}";;
+  esac
+done
+
+cprover --safety -I ../../source -I ../../source/include $ARGS $FILES

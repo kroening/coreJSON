@@ -1,0 +1,47 @@
+#!/bin/bash
+
+doit() {
+  printf "** $*\n"
+  LAST=${@: -1}
+
+  cprover --safety --smt2 \
+    --outfile chc/${LAST}.chc \
+    -I ../../source/include ../../source/core_json.c \
+    --contract ${LAST} \
+    --no-inline \
+    > logs/${LAST}.log 2>&1
+}
+
+if [ ! -e logs/. ] ; then mkdir logs ; fi
+
+if [ ! -e chc/. ] ; then mkdir chc ; fi
+
+doit source/core_json.c --contract JSON_Iterate
+doit source/core_json.c --contract JSON_SearchConst
+doit source/core_json.c --contract JSON_SearchT
+doit source/core_json.c --contract JSON_Validate
+doit source/core_json.c --contract arraySearch
+doit source/core_json.c --contract countHighBits
+doit source/core_json.c --contract iterate
+doit source/core_json.c --contract multiSearch
+doit source/core_json.c --contract nextKeyValuePair
+doit source/core_json.c --contract nextValue
+doit source/core_json.c --contract objectSearch
+doit source/core_json.c --contract skipArrayScalars
+doit source/core_json.c --contract skipAnyLiteral
+doit source/core_json.c --contract skipCollection
+doit source/core_json.c --contract skipExponent
+doit source/core_json.c --contract skipDecimals
+doit source/core_json.c --contract skipDigits
+doit source/core_json.c --contract skipEscape
+doit source/core_json.c --contract skipHexEscape
+doit source/core_json.c --contract skipNumber
+doit source/core_json.c --contract skipOneHexEscape
+doit source/core_json.c --contract skipScalars
+doit source/core_json.c --contract skipSpace
+doit source/core_json.c --contract skipSpaceAndComma
+doit source/core_json.c --contract skipString
+doit source/core_json.c --contract skipUTF8
+doit source/core_json.c --contract skipUTF8MultiByte
+doit source/core_json.c --contract shortestUTF8
+doit source/core_json.c --contract strnEq
