@@ -52,6 +52,7 @@ doit source/core_json.c --contract skipEscape
 doit source/core_json.c --contract skipHexEscape
 doit source/core_json.c --contract skipNumber
 doit source/core_json.c --contract skipOneHexEscape
+doit source/core_json.c --contract skipQueryPart
 doit source/core_json.c --contract skipScalars
 doit source/core_json.c --contract skipSpace
 doit source/core_json.c --contract skipSpaceAndComma
