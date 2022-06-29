@@ -730,7 +730,7 @@ static bool skipDigits( const char * buf,
   __CPROVER_requires(max > 0)
   __CPROVER_requires(outValue == NULL || __CPROVER_w_ok(outValue))
   __CPROVER_assigns(*start)
-  __CPROVER_assigns(*outValue)
+  __CPROVER_assigns(outValue != NULL: *outValue)
 {
     bool ret = false;
     size_t i, saveStart;
