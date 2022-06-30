@@ -31,14 +31,14 @@ skip() {
 
 if [ ! -e logs/. ] ; then mkdir logs ; fi
 
-doit source/core_json.c --contract JSON_Iterate
+skip source/core_json.c --contract JSON_Iterate BUG
 doit source/core_json.c --contract JSON_SearchConst
 doit source/core_json.c --contract JSON_SearchT
 doit source/core_json.c --contract JSON_Validate
 doit source/core_json.c --contract arraySearch
 doit source/core_json.c --contract countHighBits
 doit source/core_json.c --contract iterate
-doit source/core_json.c --contract multiSearch
+skip source/core_json.c --contract multiSearch POSTCONDITION
 doit source/core_json.c --contract nextKeyValuePair
 doit source/core_json.c --contract nextValue
 skip source/core_json.c --contract objectSearch POSTCONDITION
@@ -58,6 +58,6 @@ doit source/core_json.c --contract skipSpace
 doit source/core_json.c --contract skipSpaceAndComma
 doit source/core_json.c --contract skipString
 doit source/core_json.c --contract skipUTF8
-skip source/core_json.c --contract skipUTF8MultiByte BUG UNION
+doit source/core_json.c --contract skipUTF8MultiByte
 doit source/core_json.c --contract shortestUTF8
 doit source/core_json.c --contract strnEq
