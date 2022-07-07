@@ -31,7 +31,7 @@ skip() {
 
 if [ ! -e logs/. ] ; then mkdir logs ; fi
 
-skip source/core_json.c --contract JSON_Iterate BUG
+doit source/core_json.c --contract JSON_Iterate
 doit source/core_json.c --contract JSON_SearchConst
 doit source/core_json.c --contract JSON_SearchT
 doit source/core_json.c --contract JSON_Validate
