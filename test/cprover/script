@@ -39,7 +39,7 @@ doit source/core_json.c --contract arraySearch
 doit source/core_json.c --contract countHighBits
 doit source/core_json.c --contract iterate
 skip source/core_json.c --contract multiSearch POSTCONDITION
-doit source/core_json.c --contract nextKeyValuePair
+skip source/core_json.c --contract nextKeyValuePair POSTCONDITION
 doit source/core_json.c --contract nextValue
 skip source/core_json.c --contract objectSearch POSTCONDITION
 doit source/core_json.c --contract skipArrayScalars
