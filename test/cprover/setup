@@ -1,4 +1,5 @@
 #!/bin/sh
 
+mkdir -p ../../source/include/aws/common
 echo "/* nothing */" > ../../source/include/aws/common/config.h
 
