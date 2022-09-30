@@ -1,4 +1,4 @@
 #!/bin/sh
 
-echo "/* nothing */" > ../../include/aws/common/config.h
+echo "/* nothing */" > ../../source/include/aws/common/config.h
 
